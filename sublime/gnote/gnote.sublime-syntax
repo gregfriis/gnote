@@ -1,0 +1,89 @@
+%YAML 1.2
+---
+name: gnote
+file_extensions: [gn]
+scope: source.gn
+first_line_match: '\d{4}\-\d{2}\-\d{2}'
+
+variables:
+  comment_start: '\/\/'
+  iso_date: '\d{4}\-\d{2}\-\d{2}'
+  iso_time: '\d{2}:\d{2}(:\d{2})?'
+  iso_offset: '[\+\-]\d{1,2}(:\d{2})?'
+  iso_timestamp: '{{iso_date}}T{{iso_time}}({{iso_offset}})?'
+  slack_channel: '#{{identifier_char}}+'
+  jira: '[A-Za-z]+\-[0-9]+'
+  url: '[A-Za-z]+:\/{1,2}\S+'
+  identifier_char: '[A-Za-z_0-9\-]'
+  category: '\b[{{identifier_char}}\s]+\b'
+  weekday: '(?i)monday|tuesday|wednesday|thursday|friday|saturday|sunday'
+
+contexts:
+  main:
+    - include: note
+  comment:
+    - match: '$'
+      pop: true
+    - match: '{{comment_start}}'
+      scope: comment.line.gn punctuation.definition.comment.gn
+      push:
+        - match: '(?=\s*$)' # end of line
+          pop: true
+        - match: '.'
+          scope: comment.line.gn
+  note:
+    - match: '^(\s*)((\S)(\s+))?'
+      captures:
+        1: whitespace.gn
+        3: constant.other.status.gn
+        4: whitespace.gn
+    - match: '\s'
+      scope: whitespace.gn
+    - match: '(?={{category}}:\s)'
+      push: category
+    - match: '(?={{comment_start}})'
+      push: comment
+    - include: value
+  category:
+    - match: ':'
+      scope: punctuation.separator.gn
+      pop: true
+    - match: '{{identifier_char}}'
+      push:
+        - meta_scope: entity.name.category.gn meta.string.gn string.unquoted.plain.out.gn
+        - match: '(?=:)'
+          pop: true
+  value:
+    - match: '(?=\S)'
+      push:
+        - meta_scope: value.gn meta.string.gn
+        - match: '(?=\s*$|({{comment_start}}))' # stop once we reach the end of line or start of comment
+          pop: true
+        - include: constants
+        - match: '`'
+          push:
+            - meta_content_scope: markup.raw.inline.gn
+            - match: '`'
+              pop: true
+        - match: '\*'
+          push:
+            - meta_content_scope: markup.bold.gn
+            - match: '\*|$'
+              pop: true
+  constants:
+    - match: '{{iso_timestamp}}'
+      scope: constant.other.timestamp.gn
+    - match: '{{iso_date}}'
+      scope: constant.other.date.gn
+    - match: '{{iso_time}}'
+      scope: constant.other.time.gn
+    - match: '{{slack_channel}}'
+      scope: markup.underline.link
+    - match: '\b(todo|TODO)\b'
+      scope: keyword.other.todo.gn
+    - match: '{{url}}'
+      scope: markup.underline.link
+    - match: '{{weekday}}'
+      scope: constant.other.weekday.gn
+    - match: '{{jira}}'
+      scope: constant.other.jira

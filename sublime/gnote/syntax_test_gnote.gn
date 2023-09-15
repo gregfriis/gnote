@@ -1,0 +1,106 @@
+// SYNTAX TEST "Packages/User/gnote/gnote.sublime-syntax"
+
+// comment
+// <- comment
+
+test value with no category // comment
+//                          ^ comment
+//                         ^ source
+//                        ^ value
+//                ^ value
+// <- value
+
+category: this is a value
+//                      ^ value
+//                 ^ value
+//        ^ value
+//      ^ punctuation.separator
+// <- entity.name.category
+
+test value
+// <- value
+//  ^ value
+
+// make sure we don't have a bug where a value on a previous line ignores category on subsequent line
+value
+category: value
+// <- entity.name.category
+
+  category: value
+//^ entity.name.category
+// <- whitespace
+
+category with spaces: value
+//                  ^ punctuation.separator
+//           ^ entity.name.category
+// <- entity.name.category
+
+_Category-with_symb0ls: hello
+//                    ^ punctuation.separator
+//            ^ entity.name.category
+// <- entity.name.category
+
+value // comment with : in the middle 
+//    ^ comment
+// <- value
+
+category1: category2: multple categories are allowed
+//                    ^ value
+//         ^ entity.name.category
+//        ^ whitespace
+//       ^ punctuation.separator
+// <- entity.name.category
+
+// must have a space after : to be recognized as an actual category
+fake_category:value
+//           ^ value
+// <- value
+
+date: the date is 2023-09-12
+//                ^ constant.other.date
+2023-09-12 is the date
+// <- constant.other.date
+
+21:02:32 is the time
+// <- constant.other.time
+
+21:02 is the time
+// <- constant.other.time
+
+2023-09-12T13:37:83 is the timestamp
+//         ^ constant.other.timestamp
+// <- constant.other.timestamp
+
+this is a #slack-channel with words after it
+//        ^ markup.underline.link
+this is not a # slack-channel
+//            ^ value
+
+url: https://hello.world/path?query_parm=5
+//   ^ markup.underline.link
+
+TODO: todo
+//    ^ keyword.other.todo
+
+√ task: done
+// <- constant.other.status
+ // <- whitespace
+  // <- entity.name.category
+
+  √ b task: done
+ // <- whitespace
+  // <- constant.other.status
+   // <- whitespace
+    // <- entity.name.category
+
+hello `world`
+//     ^ markup.raw.inline
+// <- value
+
+*bold*!
+     // <- value
+ // <- markup.bold
+// <- value
+
+jira ticket: JIRA-1235
+//           ^ constant.other.jira
